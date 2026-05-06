@@ -1,7 +1,8 @@
 # KIS Utils
-
-한국투자증권 API를 파이썬에서 쉽고 간편하게 사용할 수 있도록 도와주는 유틸리티 모듈입니다. 
+한국투자증권 API를 파이썬에서 쉽고 간편하게 사용할 수 있도록 도와주는 유틸리티 모듈로 CLI 인터페이스를 제공합니다.
 접근 토큰 관리, 시세 조회, 잔고 확인 및 주문 기능을 간결한 인터페이스로 제공합니다.
+
+비교적 간편한 유틸리티 라이브러리로 사용하거나 CLI로 사용이 가능합니다
 
 ## 🚀 시작하기
 
@@ -27,21 +28,53 @@ KIS_ACCOUNT_VTS="YOUR_VTS_ACCOUNT_NUMBER"
 KIS_ACCOUNT_PROD_VTS="01"
 ```
 
-## 💡 기본 사용법
+## CLI 사용법
+
+가장 간편하게 `uv` 명령어를 사용하여 실행할 수 있습니다. (또는 `python -m kis_utils` 사용 가능)
+
+```sh
+# 현재가 조회 (기본 JSON 출력)
+uv run kis price 005930
+
+# 사람이 읽기 좋은 포맷으로 조회
+uv run kis price 005930 --pretty
+
+# 계좌 잔고 확인
+uv run kis balance --pretty
+
+# 주식 주문 (삼성전자 1주 시장가 매수)
+uv run kis order 005930 -t buy -q 1 -p 0 -d 03
+```
+
+### 주요 명령어
+- `token`: 접근 토큰 신규 발급
+- `price <종목코드>`: 현재가 정보 조회
+- `daily <종목코드>`: 일/주/월 봉 데이터 조회
+- `balance`: 계좌 잔고 및 보유 종목 조회
+- `history`: 주문 및 체결 내역 조회
+- `order`: 주식 주문 (매수/매도)
+- `buyable <종목코드>`: 매수 가능 수량 조회
+
+모든 명령어 뒤에 `--pretty`를 붙이면 한글 라벨이 포함된 가독성 좋은 화면을 볼 수 있습니다.
+
+
+
+
+##  기본 사용법
 ### 1. 접근 토큰 발급
 ```python
 import kis_utils as kis
 
-# 접근 토큰 발급 (자동으로 .access_token 파일에 저장 및 관리됨)
-access_token = kis.issue_access_token()
+# 토큰 발급 (자동으로 파일에 저장 및 갱신됨)
+access_token = kis.token()
 ```
 
 ### 2. 주식 시세 및 데이터 조회
 
 #### 현재가 조회
 ```python
-# 삼성전자(005930) 현재가 조회 (DataFrame 반환)
-price_df = kis.get_stock_price("005930")
+# 삼성전자 현재가 조회
+df = kis.price("005930")
 if not price_df.empty:
     current_price = int(price_df['stck_prpr'].iloc[0])
     print(f"현재가: {current_price:,}원")
@@ -55,15 +88,18 @@ today = datetime.now()
 start_date = (today - timedelta(days=30)).strftime("%Y%m%d")
 end_date = today.strftime("%Y%m%d")
 
-# 최근 30일 일봉 데이터 조회
-daily_data = kis.get_daily_stock_data("005930", start_date, end_date)
+# 최근 30일 일봉 데이터
+daily_data = kis.daily("005930")
+
+# 주봉 데이터
+weekly_data = kis.daily("005930", period="W")
 ```
 
 ### 3. 계좌 및 주문 관리
 
 #### 계좌 잔고 조회
 ```python
-balance = kis.account_balance()
+balance = kis.balance()
 
 # 예수금 확인
 deposit = int(balance['output2'][0]['dnca_tot_amt'])
@@ -76,18 +112,25 @@ for stock in balance['output1']:
 #### 주문 내역 조회
 ```python
 # 최근 7일간 주문 내역 조회
-history = kis.account_order_history(start_date, end_date)
+history = kis.order_history(start_date, end_date)
 ```
 
 #### 주식 주문
 ```python
 # 삼성전자 1주 시장가 매수
-result = kis.place_order(
+result = kis.buy(
     stock_code="005930",
-    order_type="2",        # 1: 매도, 2: 매수
     quantity=1,
     price=0,               # 시장가인 경우 0
     order_division="03"    # 01: 지정가, 03: 시장가
+)
+
+# 삼성전자 1주 지정가 매도
+result = kis.sell(
+    stock_code="005930",
+    quantity=1,
+    price=70000,
+    order_division="01"
 )
 ```
 
