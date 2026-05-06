@@ -11,7 +11,15 @@ from typing import Optional, Dict, Any
 
 import pandas as pd
 import requests
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
+
+# .env 파일 로드 및 경로 확인
+env_path = find_dotenv()
+if env_path:
+    print(f"Loading .env from {env_path}")
+    load_dotenv(env_path)
+else:
+    load_dotenv()
 
 # 로깅 설정
 logger = logging.getLogger(__name__)

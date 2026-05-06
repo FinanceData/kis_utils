@@ -28,25 +28,7 @@ KIS_ACCOUNT_VTS="YOUR_VTS_ACCOUNT_NUMBER"
 KIS_ACCOUNT_PROD_VTS="01"
 ```
 
-## CLI 사용법
-
-가장 간편하게 `uv` 명령어를 사용하여 실행할 수 있습니다. (또는 `python -m kis_utils` 사용 가능)
-
-```sh
-# 현재가 조회 (기본 JSON 출력)
-uv run kis price 005930
-
-# 사람이 읽기 좋은 포맷으로 조회
-uv run kis price 005930 --pretty
-
-# 계좌 잔고 확인
-uv run kis balance --pretty
-
-# 주식 주문 (삼성전자 1주 시장가 매수)
-uv run kis order 005930 -t buy -q 1 -p 0 -d 03
-```
-
-### 주요 명령어
+## 주요 명령어
 - `token`: 접근 토큰 신규 발급
 - `price <종목코드>`: 현재가 정보 조회
 - `daily <종목코드>`: 일/주/월 봉 데이터 조회
@@ -57,7 +39,33 @@ uv run kis order 005930 -t buy -q 1 -p 0 -d 03
 
 모든 명령어 뒤에 `--pretty`를 붙이면 한글 라벨이 포함된 가독성 좋은 화면을 볼 수 있습니다.
 
+## CLI 사용법
 
+가장 간편하게 `uv` 명령어를 사용하여 실행할 수 있습니다. (또는 `python -m kis_utils` 사용 가능)
+
+```sh
+# 현재가 조회 (기본 JSON 출력)
+uv run kis-utils price 005930
+
+# 사람이 읽기 좋은 포맷으로 조회
+uv run kis-utils price 005930 --pretty
+
+# 계좌 잔고 확인
+uv run kis-utils balance --pretty
+
+# 주식 주문 (삼성전자 1주 시장가 매수)
+uv run kis-utils order 005930 -t buy -q 1 -p 0 -d 03
+```
+
+## uv tool 사용법
+```sh
+uv tool install kis-utils
+
+# 설치 후
+kis-utils price 005930 --pretty
+kis-utils price 005930
+kis-utils balance --pretty
+```
 
 
 ##  기본 사용법
