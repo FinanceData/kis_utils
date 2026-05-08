@@ -67,7 +67,7 @@ def validate_config():
         )
 
 # 토큰 파일 경로
-_TOKEN_FILE = ".access_token"
+_TOKEN_FILE = os.path.join(os.path.expanduser("~"), ".access_token")
 
 # 요청 횟수 제한 관리를 위한 변수
 _request_count = 0
@@ -302,7 +302,7 @@ def order_history(start_date: Optional[str] = None, end_date: Optional[str] = No
         "ACNT_PRDT_CD": str(ACCOUNT_PROD).strip(),
         "INQR_STRT_DT": start_date, "INQR_END_DT": end_date,
         "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "", "CCLD_DVSN": "00",
-        "ORD_GNO_BRNO": "", "ODNO": "", "INQR_DVSN_3": "00", "INQR_DVSN_1": "",
+        "ORD_GNO_BRNO": "", "ODNO": "", "INQR_DVSN_3": "00", "INQR_DVSN_1": "0",
         "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""
     }
     return _api_request("GET", endpoint, tr_id, params=params)
@@ -312,13 +312,30 @@ def buyable(stock_code: str, price: int):
     validate_config()
     endpoint = "/uapi/domestic-stock/v1/trading/inquire-psbl-order"
     tr_id = "TTTC8908R" if KIS_ENVIRONMENT == '실전투자' else "VTTC8908R"
-    data = {
+    params = {
         "CANO": str(ACCOUNT).strip(),
         "ACNT_PRDT_CD": str(ACCOUNT_PROD).strip(),
         "PDNO": stock_code, "ORD_UNPR": str(price), "ORD_DVSN": "01",
         "CMA_EVLU_AMT_ICLD_YN": "N", "OVRS_ICLD_YN": "N"
     }
-    return _api_request("POST", endpoint, tr_id, data=data, use_hashkey=False)
+    return _api_request("GET", endpoint, tr_id, params=params)
+
+def unfilled():
+    """계좌 미체결 내역 조회 (주문/체결 내역 API에서 미체결만 필터링)"""
+    validate_config()
+    # nccld API 대신 daily-ccld API의 미체결 옵션(02) 사용 (더 안정적)
+    endpoint = "/uapi/domestic-stock/v1/trading/inquire-daily-ccld"
+    tr_id = "TTTC8001R" if KIS_ENVIRONMENT == '실전투자' else "VTTC8001R"
+    today = datetime.now().strftime("%Y%m%d")
+    params = {
+        "CANO": str(ACCOUNT).strip(),
+        "ACNT_PRDT_CD": str(ACCOUNT_PROD).strip(),
+        "INQR_STRT_DT": today, "INQR_END_DT": today,
+        "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "", "CCLD_DVSN": "02",
+        "ORD_GNO_BRNO": "", "ODNO": "", "INQR_DVSN_3": "00", "INQR_DVSN_1": "0",
+        "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""
+    }
+    return _api_request("GET", endpoint, tr_id, params=params)
 
 # ────────────────────────────────────────────────────────────────────────────────
 # CLI 유틸리티
@@ -483,6 +500,34 @@ def cmd_order(args):
         print(_format_json(result))
     return 0
 
+def cmd_unfilled(args):
+    result = unfilled()
+    if args.pretty:
+        # daily-ccld API는 output1에 결과를 담아줌
+        if "output1" in result:
+            orders = result["output1"]
+            if orders:
+                print("미체결 내역 (당일)")
+                print("-" * 75)
+                print(f"  {'종목명':>12} | {'구분':>4} | {'미체결수량':>8} | {'주문가격':>10} | {'주문번호':>10}")
+                print("-" * 75)
+                for o in orders:
+                    name = o.get("prdt_name", o.get("pdno", ""))
+                    side = "매수" if o.get("sll_buy_dvsn_cd") == "02" else "매도"
+                    # daily-ccld에서는 rmn_qty가 아닌 미체결수량 관련 필드 확인 필요 (보통 ord_qty - tot_ccld_qty)
+                    ord_qty = int(o.get("ord_qty", "0"))
+                    ccld_qty = int(o.get("tot_ccld_qty", "0"))
+                    unfilled_qty = ord_qty - ccld_qty
+                    price = _format_price(o.get("ord_unpr", "0"))
+                    no = o.get("odno", "")
+                    if unfilled_qty > 0:
+                        print(f"  {name:>12} | {side:>4} | {unfilled_qty:>10} | {price:>12} | {no:>12}")
+            else: print("미체결 내역이 없습니다.")
+        else: print(_format_json(result))
+    else:
+        print(_format_json(result))
+    return 0
+
 def cmd_buyable(args):
     result = buyable(args.stock_code, args.price)
     if args.pretty:
@@ -517,6 +562,8 @@ def create_parser():
     p_daily.set_defaults(func=cmd_daily)
     
     subparsers.add_parser("balance", parents=[common_parser]).set_defaults(func=cmd_balance)
+    
+    subparsers.add_parser("unfilled", parents=[common_parser]).set_defaults(func=cmd_unfilled)
     
     p_hist = subparsers.add_parser("history", parents=[common_parser])
     p_hist.add_argument("-s", "--start"); p_hist.add_argument("-e", "--end")
