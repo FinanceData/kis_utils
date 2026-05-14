@@ -34,43 +34,43 @@ KIS_ACCOUNT_PROD_VTS="01"
 
 ### 설치
 ```bash
-uv tool install kis-utils
+uv tool install --upgrade kis_utils
 ```
 
 ### 활용법
 ```bash
 # 현재가 조회 (기본 JSON 출력)
-kis-utils price 005930
+kis_utils price 005930
 
 # 사람이 읽기 좋은 포맷으로 조회
-kis-utils price 005930 --pretty
+kis_utils price 005930 --pretty
 
 # 계좌 잔고 확인
-kis-utils balance --pretty
+kis_utils balance --pretty
 
 # 주식 주문 (삼성전자 1주 시장가 매수)
-kis-utils order 005930 -t buy -q 1 -p 0
+kis_utils order 005930 -t buy -q 1 -p 0
 
 # 주식 주문 (삼성전자 1주 시장가 매수)
-kis-utils order 005930 --type buy --qty 1 --price 0
+kis_utils order 005930 --type buy --qty 1 --price 0
 
 # 주식 주문 (삼성전자 1주 지정가 매수)
-kis-utils order 005930 -t buy -q 1 -p 260000
+kis_utils order 005930 -t buy -q 1 -p 260000
 
 # 주식 주문 (삼성전자 10주 지정가 매도)
-kis-utils order 005930 -t sell -q 10 -p 280000
+kis_utils order 005930 -t sell -q 10 -p 280000
 
 # 기간별 시세 (삼성전자 일자별 시세 조회)
-kis-utils daily 005930 --pretty
+kis_utils daily 005930 --pretty
 
 # 매수가능 수량 조회 (삼성전자, 지정가 260000원 기준)
-kis-utils buyable -p 260000 005930 --pretty
+kis_utils buyable -p 260000 005930 --pretty
 
 # 매수가능 수량 조회 (삼성전자, 시장가 기준)
-kis-utils buyable -p 0 005930 --pretty
+kis_utils buyable -p 0 005930 --pretty
 
 # 최근 7일간 주문 및 체결 내역 조회
-kis-utils history --pretty
+kis_utils history --pretty
 ```
 
 

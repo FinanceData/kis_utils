@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kis-utils"
+name = "kis_utils"
 
-version = "0.1.2"
+version = "0.1.5"
 description = "Korea Investment & Securities API Utils"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -16,8 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-kis = "kis_utils:main"
-kis-utils = "kis_utils:main"
+kis_utils = "kis_utils:main"
 
 [dependency-groups]
 dev = [

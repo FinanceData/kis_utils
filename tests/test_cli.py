@@ -48,6 +48,9 @@ class TestParser:
     def setup_method(self):
         self.parser = create_parser()
 
+    def test_parser_prog(self):
+        assert self.parser.prog == "kis_utils"
+
     def test_token_command(self):
         args = self.parser.parse_args(["token"])
         assert args.command == "token"
